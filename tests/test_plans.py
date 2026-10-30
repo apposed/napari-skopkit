@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from opspec.op import Slot
 
-from skop_napari._plans import _guided
+from napari_skopkit._plans import _guided
 
 
 def slots(*names):

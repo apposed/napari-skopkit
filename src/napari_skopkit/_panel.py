@@ -7,7 +7,7 @@ losing the ability to drop a new op into the collection and see it appear.
 The napari team is working on dynamic registration; when it lands, this file
 is what gets split up.
 
-There are two widgets, not one, and the second is what gets skop-napari a
+There are two widgets, not one, and the second is what gets napari-skopkit a
 submenu: napari builds ``Plugins > scikit-ops > ...`` as soon as a plugin
 contributes more than one widget, and leaves a single one flat. Ops and
 workflows are the split worth having -- a workflow is an op, so one class
@@ -78,7 +78,7 @@ _GENERIC = frozenset(
     }
 )
 
-_log = logging.getLogger("skop_napari")
+_log = logging.getLogger("napari_skopkit")
 
 # A verbose-log line from the build tool, e.g. "DEBUG pixi_config: ...".
 _LOG_RECORD = re.compile(r"^\s*(TRACE|DEBUG|INFO|WARN|WARNING|ERROR)\b")
@@ -93,21 +93,21 @@ def _collections() -> dict[str, str]:
         [project.entry-points."opspec.collections"]
         tnia-ops = "tnia_ops"
 
-    SKOP_NAPARI_COLLECTION narrows the list to some of them, by name and
-    comma-separated, e.g. SKOP_NAPARI_COLLECTION=tnia-ops.
+    NAPARI_SKOPKIT_COLLECTION narrows the list to some of them, by name and
+    comma-separated, e.g. NAPARI_SKOPKIT_COLLECTION=tnia-ops.
     """
     found = {
         entry.name: entry.value
         for entry in importlib.metadata.entry_points(group="opspec.collections")
     }
-    wanted = os.environ.get("SKOP_NAPARI_COLLECTION")
+    wanted = os.environ.get("NAPARI_SKOPKIT_COLLECTION")
     if not wanted:
         return found
     names = [name.strip() for name in wanted.split(",") if name.strip()]
     unknown = [name for name in names if name not in found]
     if unknown:
         raise ValueError(
-            f"SKOP_NAPARI_COLLECTION names {', '.join(unknown)}, which is not "
+            f"NAPARI_SKOPKIT_COLLECTION names {', '.join(unknown)}, which is not "
             f"installed. Installed: {', '.join(sorted(found)) or 'none'}."
         )
     return {name: found[name] for name in names}
@@ -283,13 +283,13 @@ class OpsPanel(Container):
         # which is most of why running an op a second time is fast.
         #
         # napari constructs this widget itself, so there is no call site to
-        # pass debug=True at; SKOP_NAPARI_DEBUG is the way in. It echoes the
+        # pass debug=True at; NAPARI_SKOPKIT_DEBUG is the way in. It echoes the
         # worker's own stdout and stderr, which is the only view of what the
         # op is doing inside its own process.
         self._runner = (
             runner
             if runner is not None
-            else Runner(debug=bool(os.environ.get("SKOP_NAPARI_DEBUG")))
+            else Runner(debug=bool(os.environ.get("NAPARI_SKOPKIT_DEBUG")))
         )
         self._run: OpRun | None = None
         # How the chosen op would be tiled under the memory budget, if at all,

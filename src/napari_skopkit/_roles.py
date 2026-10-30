@@ -1,6 +1,6 @@
 """Translating skop's roles into napari's vocabulary.
 
-This is the whole of what makes skop-napari napari-specific: two lookup
+This is the whole of what makes napari-skopkit napari-specific: two lookup
 tables and one shape adapter. Everything else in this package is about
 widgets and threads.
 

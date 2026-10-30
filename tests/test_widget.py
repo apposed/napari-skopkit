@@ -6,8 +6,8 @@ import napari.types as nt
 import numpy as np
 from opspec.op import OpSpec, op
 
-from skop_napari._roles import annotation_for, layer_type_for
-from skop_napari._widget import build_inputs, param_docs
+from napari_skopkit._roles import annotation_for, layer_type_for
+from napari_skopkit._widget import build_inputs, param_docs
 
 
 def test_roles_become_napari_types():
@@ -132,7 +132,7 @@ def test_values_reflect_the_widgets(qtbot):
 
 def test_outputs_are_labeled_by_name():
     from skop.ops import toy
-    from skop_napari._run import outputs_of
+    from napari_skopkit._run import outputs_of
 
     single = OpSpec.from_op(toy.add)
     assert outputs_of(single, 42) == {"result": 42}
@@ -149,7 +149,7 @@ def test_a_single_field_namedtuple_output_is_unwrapped():
     # labeling the tuple itself hands napari a tuple where an array belongs.
     from skop.ops.detect import fastsam
     from skop.ops.detect._result import Boxes
-    from skop_napari._run import outputs_of
+    from napari_skopkit._run import outputs_of
 
     boxes = np.array([[236.4, 144.1, 287.5, 201.0]], dtype=np.float32)
     labeled = outputs_of(OpSpec.from_op(fastsam), Boxes(boxes))
@@ -160,7 +160,7 @@ def test_a_single_field_namedtuple_output_is_unwrapped():
 
 def test_resolve_finds_the_op_function():
     from skop.ops import toy
-    from skop_napari._run import resolve
+    from napari_skopkit._run import resolve
 
     assert resolve(OpSpec.from_op(toy.add)) is toy.add
 
@@ -175,7 +175,7 @@ def test_shapes_inputs_are_converted_from_what_a_layer_holds(qtbot):
     from opspec.op import Role
 
     from skop.ops.mask import mobilesam_masks
-    from skop_napari._roles import value_for
+    from napari_skopkit._roles import value_for
 
     boxes_param = next(
         p for p in OpSpec.from_op(mobilesam_masks).params if p.name == "boxes"
@@ -196,7 +196,7 @@ def test_canonical_boxes_pass_through_unconverted(qtbot):
     # An op called with boxes from somewhere other than a layer must not be
     # converted twice.
     from skop.ops.mask import mobilesam_masks
-    from skop_napari._roles import value_for
+    from napari_skopkit._roles import value_for
 
     boxes_param = next(
         p for p in OpSpec.from_op(mobilesam_masks).params if p.name == "boxes"

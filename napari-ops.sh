@@ -7,8 +7,8 @@
 #
 # Anything after the choice goes to napari, e.g. an image to open. tnia-ops
 # comes from the sibling checkout (../tnia-ops), added for this run only;
-# skop-napari's .venv is left as it is. The op worker's stdout and stderr
-# print in this terminal (SKOP_NAPARI_DEBUG).
+# napari-skopkit's .venv is left as it is. The op worker's stdout and stderr
+# print in this terminal (NAPARI_SKOPKIT_DEBUG).
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -22,5 +22,5 @@ case "$choice" in
 esac
 [ $# -gt 0 ] && shift
 
-SKOP_NAPARI_COLLECTION="$collections" SKOP_NAPARI_DEBUG=1 \
+NAPARI_SKOPKIT_COLLECTION="$collections" NAPARI_SKOPKIT_DEBUG=1 \
     uv run --offline --with-editable ../tnia-ops napari "$@"

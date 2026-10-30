@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "skop-napari"
+name = "napari-skopkit"
 version = "0.1.0.dev0"
 description = "Run scikit-ops ops from napari."
 license = "BSD-2-Clause"
@@ -47,15 +47,15 @@ dev = [
 ]
 
 [project.entry-points."napari.manifest"]
-skop-napari = "skop_napari:napari.yaml"
+napari-skopkit = "napari_skopkit:napari.yaml"
 
 [project.urls]
-homepage = "https://github.com/apposed/skop-napari"
-source = "https://github.com/apposed/skop-napari"
-tracker = "https://github.com/apposed/skop-napari/issues"
+homepage = "https://github.com/apposed/napari-skopkit"
+source = "https://github.com/apposed/napari-skopkit"
+tracker = "https://github.com/apposed/napari-skopkit/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/skop_napari"]
+packages = ["src/napari_skopkit"]
 
 [tool.uv.sources]
 # Developed alongside its base package; drop this once scikit-ops is on PyPI.
@@ -72,7 +72,7 @@ appose = { path = "../appose-python", editable = true }
 line-length = 88
 
 [tool.ruff.lint.isort]
-known-first-party = ["skop", "skop_napari"]
+known-first-party = ["skop", "napari_skopkit"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]

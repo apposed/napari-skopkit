@@ -13,7 +13,7 @@ import contextlib
 import numpy as np
 import pytest
 
-from skop_napari import OpsPanel
+from napari_skopkit import OpsPanel
 
 
 @contextlib.contextmanager
@@ -217,7 +217,7 @@ def test_build_progress_drives_the_progress_bar(panel):
 def test_build_log_noise_is_logged_but_not_shown(panel, caplog):
     # Appose runs pixi under -vv to drive the monitor, so most of the stderr
     # stream is pixi's debug log rather than status worth showing.
-    with caplog.at_level("INFO", logger="skop_napari"):
+    with caplog.at_level("INFO", logger="napari_skopkit"):
         panel._on_build_text(
             "DEBUG pixi_config: Loading config from /etc/pixi/config.toml\n"
             " INFO pixi_core::lock_file::update: Installed environment\n"
@@ -515,7 +515,7 @@ def test_boxes_are_reshaped_but_never_axis_labelled(panel):
     """
     from opspec.op import OutputSpec, Role
 
-    from skop_napari._roles import layer_args_for
+    from napari_skopkit._roles import layer_args_for
 
     boxes = np.array([[1.0, 2.0, 5.0, 6.0], [3.0, 4.0, 9.0, 8.0]], dtype=np.float32)
     output = OutputSpec(name="boxes", type=np.ndarray, role=Role.boxes)
@@ -575,7 +575,7 @@ def test_the_mask_view_chooser_appears_only_for_ops_that_return_masks(panel):
 def test_mask_outputs_are_projected_the_way_the_chooser_says(panel):
     from opspec.op import OutputSpec, Role
 
-    from skop_napari._roles import layer_args_for, layer_type_for
+    from napari_skopkit._roles import layer_args_for, layer_type_for
 
     # A big mask with a small one drawn inside it: the case the projection
     # strategies actually differ on.
@@ -615,7 +615,7 @@ def test_the_3d_stack_gets_an_adjustable_z_spacing(panel):
     """
     from opspec.op import OutputSpec, Role
 
-    from skop_napari._roles import layer_args_for
+    from napari_skopkit._roles import layer_args_for
 
     stack = np.zeros((3, 10, 10), dtype=np.uint8)
     stack[0, 0:8, 0:8] = 1

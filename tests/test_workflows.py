@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from skop_napari import OpsPanel, WorkflowsPanel
+from napari_skopkit import OpsPanel, WorkflowsPanel
 
 
 @pytest.fixture
