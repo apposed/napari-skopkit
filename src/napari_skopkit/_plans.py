@@ -20,7 +20,7 @@ from typing import Any
 
 from magicgui.widgets import ComboBox, Container, Label, LineEdit
 from opspec.op import OpSpec, ParamSpec
-from opspec.plan import ITERATE, PASS, SELECT, AdaptationPlan, plan
+from opspec.plan import ITERATE, PASS, SELECT, AdaptationPlan, canonical, plan
 from psygnal import Signal
 
 from . import _axes
@@ -309,7 +309,11 @@ def _guided(
     takes the two innermost displayed axes, and a 3-D op in a 2-D view keeps
     its z from wherever the names put it.
     """
-    spatial = [s for s, slot in enumerate(slots) if slot.name in _SPATIAL]
+    spatial = [
+        s
+        for s, slot in enumerate(slots)
+        if slot.name and canonical(slot.name) in _SPATIAL
+    ]
     count = min(len(spatial), len(displayed))
     if not count:
         return mapping
