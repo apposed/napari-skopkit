@@ -8,7 +8,7 @@ version = "0.1.0.dev0"
 description = "Run scikit-ops ops from napari."
 license = "BSD-2-Clause"
 authors = [{name = "scikit-ops developers"}]
-readme = "README.md"
+readme = "README-pypi.md"
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Framework :: napari",
@@ -26,11 +26,11 @@ classifiers = [
 
 requires-python = ">=3.12"
 dependencies = [
-    "scikit-ops",
+    "scikit-ops>=0.1.0.dev2",
     # Helpers for boxes and masks, from scikit-ops' repo.
-    "ophelper",
+    "ophelper>=0.1.0.dev0",
     # The runner, from scikit-ops' repo.
-    "oprunner",
+    "oprunner>=0.1.0.dev0",
     "napari>=0.5",
     "magicgui>=0.8",
     "numpy",
