@@ -13,7 +13,9 @@ Listed are the environments the installed op collections bring (every
 ``opspec.collections`` entry point, as the Ops panel finds them): one row
 each, however many ops share it. Anything else in appose's directory -- old
 folders, Fiji's -- is under "Show other environments on disk", with a filter,
-and can be deleted from here.
+and can be deleted from here. "Clean download cache" deletes what pixi's
+package cache holds that no environment uses any more, e.g. the torch a
+rebuild replaced (see ``_cache``).
 
 Everything it knows comes from oprunner's public API: ``collection_envs``,
 ``Env.status``, ``Env.log``, ``Runner.build`` and the build subscriptions.
@@ -51,6 +53,8 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 from superqt.utils import ensure_main_thread
+
+from . import _cache
 
 READY, STALE, MISSING, OTHER = "Ready", "Needs rebuild", "Not built", "On disk"
 BUILDING, FAILED = "Building…", "Failed"
@@ -137,6 +141,34 @@ class _SizeThread(QThread):
                 self.sized.emit(name, _human(_size(folder)))
 
 
+class _PruneScanThread(QThread):
+    """Finds the cache entries no environment uses: reads every file's links."""
+
+    found = Signal(object)  # list[_cache.Entry]
+
+    def __init__(self, pkgs: Path):
+        super().__init__()
+        self.pkgs = pkgs
+
+    def run(self):
+        entries = _cache.find_prunable(self.pkgs, self.isInterruptionRequested)
+        self.found.emit(entries)
+
+
+class _PruneThread(QThread):
+    """Deletes cache entries."""
+
+    done = Signal(int, object)  # bytes freed, list of error strings
+
+    def __init__(self, entries):
+        super().__init__()
+        self.entries = entries
+
+    def run(self):
+        freed, errors = _cache.delete(self.entries)
+        self.done.emit(freed, errors)
+
+
 # -- the panel --------------------------------------------------------------
 
 
@@ -152,6 +184,7 @@ class EnvironmentsPanel(QWidget):
         self._failed: dict[str, str] = {}
         self._building: dict[str, _BuildThread] = {}
         self._size_thread = None
+        self._prune_thread = None
         self._setup_ui()
         self.listen(ensure_main_thread(self._on_build_news))
         self.refresh()
@@ -185,7 +218,9 @@ class EnvironmentsPanel(QWidget):
             specs, _failures = discover(package)
             for spec in specs:
                 if spec.env in names:
-                    found.setdefault(names[spec.env], []).append(spec.name.split(":")[-1])
+                    found.setdefault(names[spec.env], []).append(
+                        spec.name.split(":")[-1]
+                    )
         return found
 
     def listen(self, on_line) -> None:
@@ -266,6 +301,15 @@ class EnvironmentsPanel(QWidget):
         ):
             buttons.addWidget(b)
         layout.addLayout(buttons)
+
+        self.prune_btn = QPushButton("Clean download cache")
+        self.prune_btn.setToolTip(
+            "Delete the packages pixi's download cache holds that no "
+            "environment uses any more -- e.g. the torch a rebuild replaced. "
+            "Environments keep working."
+        )
+        self.prune_btn.clicked.connect(self._on_prune)
+        layout.addWidget(self.prune_btn)
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
@@ -474,6 +518,54 @@ class EnvironmentsPanel(QWidget):
             self._log(f"Could not delete {folder}: {e}")
         self.refresh()
 
+    def _on_prune(self):
+        if self._building:
+            self._log("Wait for the build to finish: it is using the cache.")
+            return
+        pkgs = _cache.conda_pkgs_dir()
+        if pkgs is None:
+            self._log("No pixi package cache found.")
+            return
+        self._log(f"Looking for unused packages in {pkgs} ...")
+        self.prune_btn.setEnabled(False)
+        self._prune_thread = _PruneScanThread(pkgs)
+        self._prune_thread.found.connect(self._on_prune_found)
+        self._prune_thread.start()
+
+    def _on_prune_found(self, entries):
+        self._prune_thread = None
+        self.prune_btn.setEnabled(True)
+        if not entries:
+            self._log("Nothing to clean: every cached package is in use.")
+            return
+        unused = [e for e in entries if e.reason == _cache.UNUSED]
+        unfinished = [e for e in entries if e.reason == _cache.UNFINISHED]
+        total = sum(e.size for e in entries)
+        biggest = sorted(entries, key=lambda e: e.size, reverse=True)[:8]
+        lines = "\n".join(f"  {_human(e.size):>8}  {e.path.name}" for e in biggest)
+        text = (
+            f"Delete {len(unused)} unused and {len(unfinished)} unfinished "
+            f"packages, {_human(total)}, from\n{entries[0].path.parent}?\n\n"
+            f"Largest:\n{lines}\n\n"
+            "Environments keep working. A later build downloads again what "
+            "it needs. Close other pixi builds first."
+        )
+        if not self._confirm("Clean download cache", text):
+            return
+        self.prune_btn.setEnabled(False)
+        self._prune_thread = _PruneThread(entries)
+        self._prune_thread.done.connect(self._on_pruned)
+        self._prune_thread.start()
+
+    def _on_pruned(self, freed, errors):
+        self._prune_thread = None
+        self.prune_btn.setEnabled(True)
+        self._log(f"Cleaned the download cache: {_human(freed)} freed.")
+        for error in errors[:10]:
+            self._log(f"Could not delete {error}")
+        if len(errors) > 10:
+            self._log(f"... and {len(errors) - 10} more")
+
     def _confirm(self, title, text) -> bool:
         answer = QMessageBox.question(
             self, title, text, QMessageBox.Yes | QMessageBox.No
@@ -483,4 +575,6 @@ class EnvironmentsPanel(QWidget):
     def closeEvent(self, event):
         if self._size_thread is not None:
             self._size_thread.requestInterruption()
+        if isinstance(self._prune_thread, _PruneScanThread):
+            self._prune_thread.requestInterruption()
         super().closeEvent(event)
