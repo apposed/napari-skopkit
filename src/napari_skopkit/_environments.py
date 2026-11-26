@@ -20,10 +20,11 @@ rebuild replaced (see ``_cache``).
 Everything it knows comes from oprunner's public API: ``collection_envs``,
 ``Env.status``, ``Env.log``, ``Runner.build`` and the build subscriptions.
 
-An application that runs ops through a runner of its own -- napari-ai-lab --
-subclasses this and overrides the hooks under "Hooks" below, so that builds
-its segmenters start show here, and "Used by" names its segmenters rather
-than ops.
+An application that runs ops through a runner of its own can subclass this
+and override the hooks under "Hooks" below, so that builds it starts show
+here, and "Used by" names its own tools rather than ops. napari-ai-lab
+keeps a copy of this panel instead (its ``apps/environments_panel.py``), so
+as not to depend on napari-skopkit: a fix outside the hooks belongs in both.
 """
 
 from __future__ import annotations
